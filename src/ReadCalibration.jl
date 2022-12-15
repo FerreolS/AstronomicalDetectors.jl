@@ -3,7 +3,7 @@ module YAMLCalibrationFiles
 using EasyFITS: FitsHeader
 
 using ScientificDetectors
-using YAML, FITSIO
+using YAML, FITSIO, Dates
 using ScientificDetectors:CalibrationFrameSampler
 import ScientificDetectors.Calibration: prunecalibration
 
@@ -144,6 +144,40 @@ function filtercat(filelist::Dict{String, FitsHeader},
 	end
 end
 
+"""More complex keyword values. For now, handles a Date min and max range."""
+function filtercat(filelist::Dict{String, FitsHeader},
+					keyword::String,
+					value::Dict{String,Any})
+
+	# only works for min and max range for now
+	(	haskey(value, "min")
+		&& haskey(value, "max")
+		&& value["min"] isa TimeType
+		&& value["max"] isa TimeType
+	) || return Dict{String, FitsHeader}()
+
+	filter(filelist) do (filename, fileheader)
+
+		# trying to parse value into a Date or DateTime
+		filevalue =
+			try Date(fileheader[keyword], ISODateFormat)
+			catch
+				try
+					DateTime(fileheader[keyword], ISODateTimeFormat)
+				catch
+					# some FITS use four digits for the milliseconds, contrary to the ISO format
+					# we just remove the fourth digit
+					# the YAML library do the same, so it is consistent with the night range keywords in YAML
+					DateTime(chop(fileheader[keyword]), ISODateTimeFormat)
+				end
+			end
+
+		(value["min"] <= filevalue <= value["max"])
+	end
+end
+
+
+
 """
 	newlist = filtercat(filelist::Dict{String, FitsHeader},catdict::Dict{String, Any})
 
@@ -155,7 +189,10 @@ function  filterkeyword(filelist::Dict{String, FitsHeader},
 	keydict =  filter(p->match(Regex(filteredkeywords), p.first) === nothing,catdict)
 	if length(keydict)>0
 		for (keyword,value) in keydict
+			initialsize = length(filelist)
 			filelist =  filtercat(filelist,keyword,value)
+			filteredsize = length(filelist)
+			println("from $initialsize files, kept $filteredsize, by filter $keyword=$value")
 		end
 	end
 	return filelist
@@ -212,7 +249,9 @@ function ReadCalibrationFiles(yaml_file::AbstractString; roi = (:,:),  dir = pwd
 		merge!(catdict, value)
 		fill_filedict!(filedict,calibdict,catdict["dir"])
 		haskey(catdict,"files") && fill_filedict!(filedict,calibdict,catdict["files"])
+		println("category: $cat")
 		filescat = filterkeyword(filedict,catdict)
+		println("------------------")
 		if !isempty(filescat)
 			for (filename,fitshead) in filescat
 				hdu = FITS(filename)[catdict["hdu"]] :: ImageHDU
