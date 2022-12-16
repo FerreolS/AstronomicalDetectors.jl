@@ -70,3 +70,18 @@ Optional keywords are:
 - `hdu` : name of the FITS HDU that contains the data (default `primary`).
 
 All the keywords given in the root of the file are set for all the categories (as `suffixes` in the example) but this can be overiden by keywords in each category (as `exptime` in the example).
+
+### Night ranges
+
+to specify a range for the `DATE-OBS` keyword:
+
+```yaml
+DATE-OBS:
+    min: 2021-04-01
+    max: 2021-04-02T12:07:09.8206
+```
+
+As for other keywords, You can do it globally in the YAML or put it in a category.
+Min and max bounds are inclusive. Both are required. Please note that `DateTime("2022-04-01") == DateTime("2022-04-01T00:00:00.000")`, it matters when you set a maximum date.
+Supported date formats are ISO Date, ISO DateTime from the Julia Dates package.
+Note that some FITS files use four digits for "milliseconds". In this case the fourth digit is thrown. If you have a file with the `DATE-OBS= 2021-11-25T12:07:09.8206`, and you specify the max range `2021-11-25T12:07:09.8206`, your file will correctly be included.
