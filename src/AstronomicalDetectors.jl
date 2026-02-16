@@ -20,7 +20,7 @@ export
     scan_calibrations,
     ReadCalibrationFiles
 
-using EasyFITS: FitsFile, FitsHeader, FitsImageHDU
+using AstroFITS: FitsFile, FitsHeader, FitsImageHDU
 
 using SimpleExpressions
 
@@ -124,7 +124,7 @@ end
 #    ESO DPR CATG = SCIENCE or CALIB
 #
 function default_scanner(filename::AbstractString,
-                         hdr::FitsHeader = read(FitsHeader, filename);
+                         hdr::FitsHeader = readfits(FitsHeader, filename);
                          exptime::AbstractString = "ESO DET SEQ1 REALDIT",
                          category::AbstractString = "ESO DPR TYPE")
 
@@ -200,7 +200,7 @@ function Base.read(::Type{CalibrationData{T}},
     producer = Channel{CalibrationDataFrame{T,N}}() do chn
         for item in list
             FitsFile(item.path) do file
-                hdu = FitsImageHDU(file, 1)
+                hdu = file[1]
                 naxis = hdu.data_ndims
                 width, height, nframes = item.dims
                 if naxis == N && nframes == 1
