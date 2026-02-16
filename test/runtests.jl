@@ -1,6 +1,6 @@
 using AstronomicalDetectors
 using Test
-using EasyFITS
+using AstroFITS
 using Dates
 using AstronomicalDetectors.YAMLCalibrationFiles
 using AstronomicalDetectors.YAMLCalibrationFiles:filtercat
@@ -212,7 +212,7 @@ end
                 # put one in a wrong folder to see if it is correctly excluded
                 writefits!("alice/calibration-files/file3bis.fits", hdr3, [1;;])
 
-                data = ReadCalibrationFiles(initialdir * "/test/example_from_the_doc.yml")
+                data = ReadCalibrationFiles(initialdir * "/example_from_the_doc.yml")
 
                 @test "FLAT"       in keys(data.cat_index)
                 @test "BACKGROUND" in keys(data.cat_index)

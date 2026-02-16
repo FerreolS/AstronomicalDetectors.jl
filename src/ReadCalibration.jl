@@ -1,6 +1,6 @@
 module YAMLCalibrationFiles
 
-using EasyFITS: FitsFile, FitsHeader, FitsImageHDU
+using AstroFITS: FitsFile, FitsHeader, FitsImageHDU
 using ScientificDetectors
 using YAML
 using ScientificDetectors:CalibrationFrameSampler
@@ -22,7 +22,7 @@ function fill_filedict!(filedict::Dict{String, FitsHeader},
             if isfile(filename)
                 if endswith(filename,catdict["suffixes"])
                     get!(filedict, filename) do
-                        read(FitsHeader, filename)
+                        readfits(FitsHeader, filename)
                     end
                 end
             elseif isdir(filename) && catdict["include subdirectory"]
@@ -353,7 +353,7 @@ function ReadCalibrationFiles(yaml_file::AbstractString;
 
                 FitsFile(filename) do file
 
-                    hdu = FitsImageHDU(file, Int(catdict["hdu"]))
+                    hdu = file[catdict["hdu"]]
 
                     if isfirst
                         width, height = hdu.data_size
