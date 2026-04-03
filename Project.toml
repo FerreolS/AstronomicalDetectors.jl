@@ -23,3 +23,4 @@ julia = "1.10"
 
 [sources]
 ScientificDetectors = {url="https://github.com/emmt/ScientificDetectors.jl", rev = "main"}
+SimpleExpressions = {url="https://github.com/emmt/SimpleExpressions.jl"}
